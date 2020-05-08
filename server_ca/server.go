@@ -1,15 +1,19 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 	"io"
 	"io/ioutil"
 	"log"
 	"net"
 	pb "stream/proto"
+	"time"
 )
 
 type StreamService struct{}
@@ -46,6 +50,9 @@ func (s *StreamService) Record(stream pb.StreamService_RecordServer) error {
 
 func (s *StreamService) Route(stream pb.StreamService_RouteServer) error {
 	for {
+		if stream.Context().Err() == context.Canceled {
+			return status.Errorf(codes.Canceled, "StreamService.Route canceled")
+		}
 		in, err := stream.Recv()
 		if err == io.EOF {
 			return nil
@@ -54,7 +61,9 @@ func (s *StreamService) Route(stream pb.StreamService_RouteServer) error {
 			return err
 		}
 		log.Printf("stream.Route pt.name: %s, pt.value: %d", in.Pt.Name, in.Pt.Value)
+		time.Sleep(2 * time.Second)
 		err = stream.Send(&pb.StreamResponse{Pt: in.Pt})
+		log.Println("stream.Route send Pt")
 		if err != nil {
 			return err
 		}
