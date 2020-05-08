@@ -162,4 +162,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("printRoute.err: %v", err)
 	}
+	/*
+		在 Client 中绝大部分与 Server 一致，不同点的地方是，在 Client 请求 Server 端时，Client 端会使用根证书和 ServerName 去对 Server 端进行校验
+
+		简单流程大致如下：
+
+		Client 通过请求得到 Server 端的证书
+		使用 CA 认证的根证书对 Server 端的证书进行可靠性、有效性等校验
+		校验 ServerName 是否可用、有效
+		当然了，在设置了 tls.RequireAndVerifyClientCert 模式的情况下，Server 也会使用 CA 认证的根证书对 Client 端的证书进行可靠性、有效性等校验。也就是两边都会进行校验，极大的保证了安全性
+	*/
 }
